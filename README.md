@@ -1,9 +1,7 @@
 Pragmatic OpenAI SDK for Go focused on ChatGPT
 ==============================================
 
-Zero Dependencies • Tokenizer • Simple Code • Made for ChatGPT
-
-Best way to use ChatGPT from Go.
+Zero Dependencies • Tokenizer • Simple Code • Best way to use ChatGPT from Go
 
 Install:
 
