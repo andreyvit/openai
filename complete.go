@@ -9,7 +9,7 @@ import (
 // Note that it sets Temperature to 0 and MaxTokens to 256.
 func DefaultCompleteOptions() Options {
 	return Options{
-		Model:       ModelBestTextInstruction,
+		Model:       ModelDefaultCompletion,
 		MaxTokens:   256,
 		Temperature: 0,
 		TopP:        1.0,

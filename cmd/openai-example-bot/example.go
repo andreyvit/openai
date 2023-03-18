@@ -43,7 +43,7 @@ func main() {
 			fmt.Printf("** %v\n", err)
 			continue
 		}
-		cost += openai.Cost(usage.TotalTokens, opt.Model)
+		cost += openai.Cost(usage.PromptTokens, usage.CompletionTokens, opt.Model)
 
 		fmt.Printf("\nChatGPT: %s\n\n", strings.TrimSpace(msgs[0].Content))
 

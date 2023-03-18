@@ -14,7 +14,7 @@ Run the example:
 
 Batteries included:
 
-* Use ChatGPT, `text-davinci-003` and fine-tuned models
+* Use ChatGPT 3 & 4, `text-davinci-003` and fine-tuned models
 * Use Embeddings API to add knowledge base excerpts (“context”) to your prompts
 * Compute token count (plus a full tokenizer with encoding/decoding)
 * Compute costs

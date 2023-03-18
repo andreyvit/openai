@@ -38,7 +38,7 @@ func AssistantMsg(content string) Msg {
 // Note that it sets Temperature to 0 and enables unlimited MaxTokens.
 func DefaultChatOptions() Options {
 	return Options{
-		Model:       ModelBestChat,
+		Model:       ModelDefaultChat,
 		MaxTokens:   0,
 		Temperature: 0,
 		TopP:        1.0,

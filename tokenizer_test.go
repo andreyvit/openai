@@ -7,7 +7,7 @@ import (
 )
 
 func TestTokenizer(t *testing.T) {
-	const model = ModelBestChat
+	const model = ModelDefaultChat
 	tests := []struct {
 		input    string
 		expected string
