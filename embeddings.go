@@ -9,7 +9,7 @@ func ComputeEmbedding(ctx context.Context, input string, client *http.Client, cr
 	const callID = "ComputeEmbedding"
 
 	req := &embeddingsRequest{
-		Model: "text-embedding-ada-002",
+		Model: ModelEmbeddingAda002,
 		Input: input,
 	}
 

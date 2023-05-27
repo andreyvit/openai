@@ -31,6 +31,9 @@ const (
 	// ModelBaseDavinci is an older GPT 3 (not GPT 3.5) family base model. Only useful for fine-tuning.
 	ModelBaseDavinci = "davinci"
 
+	// ModelEmbeddingAda002 is the best embedding model so far.
+	ModelEmbeddingAda002 = "text-embedding-ada-002"
+
 	modelChatGPT35TurboPrefix  = "gpt-3.5-turbo-"
 	modelChatGPT4Prefix        = "gpt-4-"
 	modelChatGPT4With32kPrefix = "gpt-4-32k-"
