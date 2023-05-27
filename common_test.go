@@ -46,7 +46,32 @@ func TestCost(t *testing.T) {
 		{3328_00, 768_00, ModelChatGPT35Turbo, "$0.82"},
 		{3840_00, 256_00, ModelChatGPT35Turbo, "$0.82"},
 
+		// less-than-max-GPT-3.5 context
+		{2000, 768, ModelChatGPT4, "$0.11"},
+		{2000, 768, ModelChatGPT35Turbo, "$0.01"},
+		{1500, 768, ModelChatGPT4, "$0.09"},
+		{1500, 768, ModelChatGPT35Turbo, "$0.00"},
+		{1000, 768, ModelChatGPT4, "$0.08"},
+		{1000, 768, ModelChatGPT35Turbo, "$0.00"},
+
+		{2000, 512, ModelChatGPT4, "$0.09"},
+		{2000, 512, ModelChatGPT35Turbo, "$0.01"},
+		{1500, 512, ModelChatGPT4, "$0.08"},
+		{1500, 512, ModelChatGPT35Turbo, "$0.00"},
+		{1000, 512, ModelChatGPT4, "$0.06"},
+		{1000, 512, ModelChatGPT35Turbo, "$0.00"},
+
+		{2000, 256, ModelChatGPT4, "$0.08"},
+		{2000, 256, ModelChatGPT35Turbo, "$0.00"},
+		{1500, 256, ModelChatGPT4, "$0.06"},
+		{1500, 256, ModelChatGPT35Turbo, "$0.00"},
+		{1000, 256, ModelChatGPT4, "$0.05"},
+		{1000, 256, ModelChatGPT35Turbo, "$0.00"},
+
 		// random large example
+		{2000_00, 768_00, ModelChatGPT35Turbo, "$0.55"},
+		{2000_00, 512_00, ModelChatGPT35Turbo, "$0.50"},
+		{2000_00, 256_00, ModelChatGPT35Turbo, "$0.45"},
 		{1_000_000, 100_000, ModelChatGPT4, "$36.00"},
 		{1_000_000, 100_000, ModelChatGPT4With32k, "$72.00"},
 		{1_000_000, 100_000, ModelChatGPT35Turbo, "$2.20"},
