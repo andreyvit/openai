@@ -5,7 +5,7 @@ Zero Dependencies • Tokenizer • Simple Code • Best way to use ChatGPT from
 
 Install:
 
-    go get github.com/andreyvit/openai
+    go get github.com/andreyvit/openai@latest
 
 Run the example:
 
