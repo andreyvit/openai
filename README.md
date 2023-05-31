@@ -95,7 +95,7 @@ Updating binary files:
 
 TODO:
 
-- [ ] Rewrite based on code and binary data from [tiktoken](https://github.com/openai/tiktoken/tree/main/tiktoken)
+- [ ] Rewrite tokenizer based on code and binary data from [tiktoken](https://github.com/openai/tiktoken/tree/main/tiktoken)
 
 
 MIT License
