@@ -11,6 +11,14 @@ import (
 	"unicode/utf8"
 )
 
+const (
+	eventStreamContentType = "text/event-stream"
+)
+
+var (
+	streamEndMarker = []byte("[DONE]")
+)
+
 type Error struct {
 	CallID            string
 	IsNetwork         bool
@@ -57,6 +65,8 @@ func (e *Error) Unwrap() error {
 	return e.Cause
 }
 
+type streamSync = func(data []byte) error
+
 func post(ctx context.Context, callID, endpoint string, client *http.Client, creds Credentials, input any, outputPtr any) error {
 	inputRaw := must(json.Marshal(input))
 	r := must(http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(inputRaw)))
@@ -80,30 +90,76 @@ func post(ctx context.Context, callID, endpoint string, client *http.Client, cre
 	}
 	defer resp.Body.Close()
 
-	outputRaw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return &Error{
-			CallID:    callID,
-			IsNetwork: true,
-			Cause:     err,
-		}
-	}
-
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-		err := json.Unmarshal(outputRaw, outputPtr)
-		if err != nil {
-			return &Error{
-				CallID:            callID,
-				IsNetwork:         len(outputRaw) == 0 || outputRaw[0] != '{',
-				StatusCode:        resp.StatusCode,
-				Message:           "error unmashalling body",
-				RawResponseBody:   outputRaw,
-				PrintResponseBody: true,
-				Cause:             err,
+		ctype := resp.Header.Get("Content-Type")
+
+		if f, ok := outputPtr.(streamSync); ok {
+			if ctype != eventStreamContentType {
+				outputRaw, err := io.ReadAll(resp.Body)
+				if err != nil {
+					return &Error{
+						CallID:    callID,
+						IsNetwork: true,
+						Cause:     err,
+					}
+				}
+				return &Error{
+					CallID:            callID,
+					StatusCode:        resp.StatusCode,
+					RawResponseBody:   outputRaw,
+					PrintResponseBody: true,
+				}
+			}
+
+			err = parseEventStream(resp.Body, 1024*1024, func(id, event string, data []byte) error {
+				if bytes.Equal(data, streamEndMarker) {
+					return errCloseEventStream
+				}
+				return f(data)
+			}, nil)
+			if err != nil {
+				return &Error{
+					CallID:     callID,
+					IsNetwork:  false,
+					StatusCode: resp.StatusCode,
+					Message:    "error processing chunk of streaming body",
+					Cause:      err,
+				}
+			}
+		} else {
+			outputRaw, err := io.ReadAll(resp.Body)
+			if err != nil {
+				return &Error{
+					CallID:    callID,
+					IsNetwork: true,
+					Cause:     err,
+				}
+			}
+
+			err = json.Unmarshal(outputRaw, outputPtr)
+			if err != nil {
+				return &Error{
+					CallID:            callID,
+					IsNetwork:         len(outputRaw) == 0 || outputRaw[0] != '{',
+					StatusCode:        resp.StatusCode,
+					Message:           "error unmashalling body",
+					RawResponseBody:   outputRaw,
+					PrintResponseBody: true,
+					Cause:             err,
+				}
 			}
 		}
 		return nil
 	} else {
+		outputRaw, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return &Error{
+				CallID:    callID,
+				IsNetwork: true,
+				Cause:     err,
+			}
+		}
+
 		errResult := &Error{
 			CallID:            callID,
 			StatusCode:        resp.StatusCode,
@@ -111,7 +167,7 @@ func post(ctx context.Context, callID, endpoint string, client *http.Client, cre
 			PrintResponseBody: true,
 		}
 		var errResp errorResponse
-		err := json.Unmarshal(outputRaw, &errResp)
+		err = json.Unmarshal(outputRaw, &errResp)
 		if err == nil && errResp.Error != nil {
 			if s, ok := errResp.Error.Type.(string); ok {
 				errResult.Type = s

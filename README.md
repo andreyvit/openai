@@ -16,6 +16,7 @@ Batteries included:
 
 * Use ChatGPT 3 & 4, `text-davinci-003` and fine-tuned models
 * Use Embeddings API to add knowledge base excerpts (“context”) to your prompts
+* Stream chat completions
 * Compute token count (plus a full tokenizer with encoding/decoding)
 * Compute costs
 * Utilities to trim history
@@ -24,7 +25,7 @@ Pragmatic:
 
 * No dependencies
 * No abstractions
-* Under 1000 lines of code (you should read and understand the code of all your dependencies)
+* Under 1500 lines of code (you can actually read and understand the entire code here)
 * Sensible error handling
 
 

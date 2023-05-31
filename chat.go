@@ -2,7 +2,10 @@ package openai
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 type Role string
@@ -77,6 +80,42 @@ func Chat(ctx context.Context, messages []Msg, opt Options, client *http.Client,
 	return result, resp.Usage, nil
 }
 
+// StreamChat suggests the next assistant's message for the given prompt
+// via ChatGPT, streaming the response.
+// Options should originate from DefaultChatOptions, not DefaultCompleteOptions.
+// Options.N must be 0 or 1.
+func StreamChat(ctx context.Context, messages []Msg, opt Options, client *http.Client, creds Credentials, f func(msg *Msg, delta string) error) (Msg, error) {
+	const callID = "StreamChat"
+
+	req := &chatRequest{
+		Msgs:    messages,
+		Options: opt,
+		Stream:  true,
+	}
+
+	var msg Msg
+	var buf strings.Builder
+	err := post(ctx, callID, "https://api.openai.com/v1/chat/completions", client, creds, req, func(data []byte) error {
+		var resp chatStreamingResponse
+		if err := json.Unmarshal(data, &resp); err != nil {
+			return err
+		}
+		if len(resp.Choices) != 1 {
+			return fmt.Errorf("expected exactly one choice")
+		}
+		delta := resp.Choices[0].Delta
+		if delta.Role != "" {
+			msg.Role = delta.Role
+		}
+		if delta.Content != "" {
+			buf.WriteString(delta.Content)
+			msg.Content = buf.String()
+		}
+		return f(&msg, delta.Content)
+	})
+	return msg, err
+}
+
 type chatRequest struct {
 	Msgs []Msg `json:"messages"`
 	Options
@@ -89,10 +128,10 @@ type message struct {
 }
 
 type chatResponse struct {
-	ID      string       `json:"id"`
-	Object  string       `json:"object"`
-	Created int          `json:"created"`
-	Model   string       `json:"model"`
+	// ID      string       `json:"id"`
+	// Object  string       `json:"object"`
+	// Created int          `json:"created"`
+	// Model   string       `json:"model"`
 	Choices []chatChoice `json:"choices"`
 	Usage   Usage        `json:"usage"`
 }
@@ -100,5 +139,14 @@ type chatResponse struct {
 type chatChoice struct {
 	Msg          Msg    `json:"message"`
 	Index        int    `json:"index"`
+	FinishReason string `json:"finish_reason"`
+}
+
+type chatStreamingResponse struct {
+	Choices []chatStreamingChoice `json:"choices"`
+}
+
+type chatStreamingChoice struct {
+	Delta        Msg    `json:"delta"`
 	FinishReason string `json:"finish_reason"`
 }
