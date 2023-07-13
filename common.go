@@ -173,6 +173,9 @@ type Options struct {
 	// MaxTokens is upper limit on completion length. In chat API, use 0 to allow the maximum possible length (4096 minus prompt length).
 	MaxTokens int `json:"max_tokens,omitempty"`
 
+	Functions        []any `json:"functions,omitempty"`
+	FunctionCallMode any   `json:"function_call,omitempty"`
+
 	Temperature float64 `json:"temperature"`
 
 	TopP float64 `json:"top_p"`
@@ -191,6 +194,11 @@ type Options struct {
 
 	// FrequencyPenalty number between 0 and 1 that penalizes tokens on existing frequency in the text so far.
 	FrequencyPenalty float64 `json:"frequency_penalty"`
+}
+
+// ForceFunctionCall is a value to use in Options.FunctionCallMode.
+type ForceFunctionCall struct {
+	Name string `json:"name"`
 }
 
 type FinishReason string

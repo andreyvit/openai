@@ -18,23 +18,50 @@ const (
 
 // Msg is a single chat message.
 type Msg struct {
-	Role    Role   `json:"role"`
-	Content string `json:"content"`
+	Role         Role          `json:"role"`
+	Content      string        `json:"content"`
+	FunctionCall *FunctionCall `json:"function_call,omitempty"`
+}
+
+type FunctionCall struct {
+	Name      string `json:"name"`
+	Arguments string `json:"arguments"`
+}
+
+func (msg *Msg) UnmarshalCallArguments(out any) error {
+	return msg.FunctionCall.UnmarshalArguments(out) // tolerates nil
+}
+func (call *FunctionCall) UnmarshalArguments(out any) error {
+	if call == nil || call.Name == "" {
+		return &Error{
+			CallID:  "UnmarshalArguments",
+			Message: "ChatGPT did not respond with a function call",
+		}
+	}
+	err := json.Unmarshal([]byte(call.Arguments), out)
+	if err != nil {
+		return &Error{
+			CallID:  "UnmarshalArguments",
+			Message: fmt.Sprintf("ChatGPT returned invalid arguments JSON for %s call", call.Name),
+			Cause:   err,
+		}
+	}
+	return nil
 }
 
 // SystemMsg makes an Msg with a System role.
 func SystemMsg(content string) Msg {
-	return Msg{System, content}
+	return Msg{System, content, nil}
 }
 
 // UserMsg makes an Msg with a User role.
 func UserMsg(content string) Msg {
-	return Msg{User, content}
+	return Msg{User, content, nil}
 }
 
 // AssistantMsg makes an Msg with an Assistant role.
 func AssistantMsg(content string) Msg {
-	return Msg{Assistant, content}
+	return Msg{Assistant, content, nil}
 }
 
 // DefaultChatOptions provides a safe and conservative starting point for Chat call options.
