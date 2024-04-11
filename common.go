@@ -102,7 +102,7 @@ func (p Price) String() string {
 // tokens with the given model.
 func Cost(promptTokens, completionTokens int, model string) Price {
 	switch model {
-	case ModelChatGPT4TurboPreview, "gpt-4-1106-preview", "gpt-4-0125-preview":
+	case ModelChatGPT4Turbo, ModelChatGPT4TurboPreview, "gpt-4-1106-preview", "gpt-4-0125-preview":
 		return Price(promptTokens)*1000 + Price(completionTokens)*3000
 	case ModelChatGPT4:
 		return Price(promptTokens)*3000 + Price(completionTokens)*6000
