@@ -200,6 +200,8 @@ type Options struct {
 
 	Functions        []any `json:"functions,omitempty"`
 	FunctionCallMode any   `json:"function_call,omitempty"`
+	Tools            []any `json:"tools,omitempty"`
+	ToolChoice       any   `json:"tool_choice,omitempty"`
 
 	Temperature float64 `json:"temperature"`
 
