@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"strings"
 	"unicode/utf8"
@@ -99,7 +100,7 @@ func post(ctx context.Context, callID, endpoint string, client *http.Client, cre
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
-		ctype := resp.Header.Get("Content-Type")
+		ctype, _, _ := mime.ParseMediaType(resp.Header.Get("Content-Type"))
 
 		if f, ok := outputPtr.(streamSync); ok {
 			if ctype != eventStreamContentType {
