@@ -67,8 +67,16 @@ func (e *Error) Unwrap() error {
 
 type streamSync = func(data []byte) error
 
+func saneMarshal(v any) []byte {
+	var buf bytes.Buffer
+	e := json.NewEncoder(&buf)
+	e.SetEscapeHTML(false)
+	ensure(e.Encode(v))
+	return buf.Bytes()
+}
+
 func post(ctx context.Context, callID, endpoint string, client *http.Client, creds Credentials, input any, outputPtr any) error {
-	inputRaw := must(json.Marshal(input))
+	inputRaw := saneMarshal(input)
 	r := must(http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(inputRaw)))
 
 	h := r.Header
@@ -196,6 +204,12 @@ func must[T any](v T, err error) T {
 		panic(err)
 	}
 	return v
+}
+
+func ensure(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
 func curl(method, path string, headers http.Header, body []byte) string {
