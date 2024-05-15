@@ -7,7 +7,10 @@ import (
 )
 
 const (
-	// ModelChatGPT4Turbo is the current best chat model, gpt-4-turbo, with 128k context.
+	// ModelChatGPT4o is the current best chat model, gpt-4o, with 128k context.
+	ModelChatGPT4o = "gpt-4o"
+
+	// ModelChatGPT4Turbo is the first 128k context model, gpt-4-turbo.
 	ModelChatGPT4Turbo = "gpt-4-turbo"
 
 	// ModelChatGPT4TurboPreview is the preview of GPT-4 Turbo, with 128k context.
@@ -53,6 +56,7 @@ const (
 )
 
 var (
+	gpt4oSnapshotRe       = regexp.MustCompile(`^gpt-4o-\d{4}-\d{2}-\d{2}$`)
 	gpt4TurboSnapshotRe   = regexp.MustCompile(`^gpt-4-turbo-\d{4}-\d{2}-\d{2}$`)
 	gpt35TurboSnapshotRe  = regexp.MustCompile(`^gpt-3.5-turbo-\d{4}$`)
 	gpt4With32kSnapshotRe = regexp.MustCompile(`^gpt-4-32k-\d{4}$`)
@@ -77,6 +81,8 @@ func MaxTokens(model string) int {
 		return 32768
 	case ModelChatGPT4Turbo, ModelChatGPT4TurboPreview, "gpt-4-1106-preview", "gpt-4-0125-preview":
 		return 128000
+	case ModelChatGPT4o:
+		return 128000
 	case ModelEmbeddingAda002, ModelEmbedding3Small, ModelEmbedding3Large:
 		return 8192
 	default:
@@ -91,6 +97,7 @@ func MaxTokens(model string) int {
 }
 
 // Price is an amount in 1/1_000_000 of a cent. I.e. $2 per 1M tokens = $0.002 per 1K tokens = Price(200) per token.
+// Max price is thus $92_233_720_368 ($92 billion). But looks like we'll have to scale it soon!
 type Price int64
 
 // String formats the price as dollars and cents, e.g. $3.14.
@@ -102,6 +109,8 @@ func (p Price) String() string {
 // tokens with the given model.
 func Cost(promptTokens, completionTokens int, model string) Price {
 	switch model {
+	case ModelChatGPT4o:
+		return Price(promptTokens)*500 + Price(completionTokens)*1500
 	case ModelChatGPT4Turbo, ModelChatGPT4TurboPreview, "gpt-4-1106-preview", "gpt-4-0125-preview":
 		return Price(promptTokens)*1000 + Price(completionTokens)*3000
 	case ModelChatGPT4:
@@ -168,6 +177,9 @@ func FineTuningCost(tokens int, model string) Price {
 }
 
 func snapshotToGeneric(model string) string {
+	if gpt4oSnapshotRe.MatchString(model) {
+		return ModelChatGPT4o
+	}
 	if gpt4TurboSnapshotRe.MatchString(model) {
 		return ModelChatGPT4Turbo
 	}
