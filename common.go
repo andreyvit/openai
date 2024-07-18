@@ -10,6 +10,9 @@ const (
 	// ModelChatGPT4o is the current best chat model, gpt-4o, with 128k context.
 	ModelChatGPT4o = "gpt-4o"
 
+	// ModelChatGPT4oMini is the current best low-cost model, gpt-4o-mini, with 128k context.
+	ModelChatGPT4oMini = "gpt-4o-mini"
+
 	// ModelChatGPT4Turbo is the first 128k context model, gpt-4-turbo.
 	ModelChatGPT4Turbo = "gpt-4-turbo"
 
@@ -57,6 +60,7 @@ const (
 
 var (
 	gpt4oSnapshotRe       = regexp.MustCompile(`^gpt-4o-\d{4}-\d{2}-\d{2}$`)
+	gpt4oMiniSnapshotRe   = regexp.MustCompile(`^gpt-4o-mini-\d{4}-\d{2}-\d{2}$`)
 	gpt4TurboSnapshotRe   = regexp.MustCompile(`^gpt-4-turbo-\d{4}-\d{2}-\d{2}$`)
 	gpt35TurboSnapshotRe  = regexp.MustCompile(`^gpt-3.5-turbo-\d{4}$`)
 	gpt4With32kSnapshotRe = regexp.MustCompile(`^gpt-4-32k-\d{4}$`)
@@ -81,7 +85,7 @@ func MaxTokens(model string) int {
 		return 32768
 	case ModelChatGPT4Turbo, ModelChatGPT4TurboPreview, "gpt-4-1106-preview", "gpt-4-0125-preview":
 		return 128000
-	case ModelChatGPT4o:
+	case ModelChatGPT4o, ModelChatGPT4oMini:
 		return 128000
 	case ModelEmbeddingAda002, ModelEmbedding3Small, ModelEmbedding3Large:
 		return 8192
@@ -111,6 +115,8 @@ func Cost(promptTokens, completionTokens int, model string) Price {
 	switch model {
 	case ModelChatGPT4o:
 		return Price(promptTokens)*500 + Price(completionTokens)*1500
+	case ModelChatGPT4oMini:
+		return Price(promptTokens)*15 + Price(completionTokens)*60
 	case ModelChatGPT4Turbo, ModelChatGPT4TurboPreview, "gpt-4-1106-preview", "gpt-4-0125-preview":
 		return Price(promptTokens)*1000 + Price(completionTokens)*3000
 	case ModelChatGPT4:
@@ -179,6 +185,9 @@ func FineTuningCost(tokens int, model string) Price {
 func snapshotToGeneric(model string) string {
 	if gpt4oSnapshotRe.MatchString(model) {
 		return ModelChatGPT4o
+	}
+	if gpt4oMiniSnapshotRe.MatchString(model) {
+		return ModelChatGPT4oMini
 	}
 	if gpt4TurboSnapshotRe.MatchString(model) {
 		return ModelChatGPT4Turbo
