@@ -1,7 +1,7 @@
 Pragmatic OpenAI SDK for Go focused on ChatGPT
 ==============================================
 
-Zero Dependencies • Tokenizer • Simple Code • Best way to use ChatGPT from Go
+Go client for Chat Completions, legacy Completions and Embeddings, with a tokenizer and streaming support.
 
 Install:
 
@@ -14,64 +14,68 @@ Run the example:
 
 Batteries included:
 
-* Use ChatGPT 3 & 4, `text-davinci-003` and fine-tuned models
+* Call the implemented Chat Completions, Completions and Embeddings endpoints
 * Use Embeddings API to add knowledge base excerpts (“context”) to your prompts
 * Stream chat completions
-* Compute token count (plus a full tokenizer with encoding/decoding)
-* Compute costs
+* Estimate token counts with the bundled tokenizer (encoding/decoding included)
+* Estimate costs using bundled model prices
 * Utilities to trim history
 
 Pragmatic:
 
 * No dependencies
 * No abstractions
-* Under 1500 lines of code (you can actually read and understand the entire code here)
 * Sensible error handling
 
 
 Status
 ------
 
-Used in production. Note: if you're looking to hire someone to build an AI bot, ping me at [andrey@tarantsov.com](mailto:andrey+chatgptbots@tarantsov.com).
+The API surface and bundled model tables reflect the SDK’s original 2023-era scope. There is no Responses API implementation. Tokenization, context limits and prices are model-specific; verify the bundled tables before using these estimates for a newer model or billing. Model constants do not guarantee that an endpoint still serves that model.
+
+Maintenance: this repository does not promise coverage of new OpenAI APIs or models. Check implementation and recent changes for your integration.
+
+Note: if you're looking to hire someone to build an AI bot, ping me at [andrey@tarantsov.com](mailto:andrey+chatgptbots@tarantsov.com).
 
 
-Example Bot
+One request
 -----------
 
+This sends a paid API request.
+
 ```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/andreyvit/openai"
+)
+
 func main() {
-    opt := openai.DefaultChatOptions()
-    opt.MaxTokens = 768 // limit response length
-    chat := []openai.Msg{
-        openai.SystemMsg("You are a helpful assistant. Many would say you are way too cheerful and over the top. Answer concisely, adding jokes and exclamantions."),
-    }
-    client := &http.Client{
-        Timeout: 2 * time.Minute, // sometimes this stuff takes a long time to respond
-    }
-
-    scanner := bufio.NewScanner(bufio.NewReader(os.Stdin))
-    for scanner.Scan() {
-        input := scanner.Text()
-
-        // Limit input message length to 768 tokens
-        if openai.TokenCount(input, opt.Model) > 768 {
-            fmt.Printf("** message too long\n")
-            continue
-        }
-
-        // Add message to history and truncate oldest messages if history no longer fits
-        chat = append(chat, openai.UserMsg(input))
-        chat, _ = openai.DropChatHistoryIfNeeded(chat, 1, openai.MaxTokens(opt.Model), opt.Model)
-
-        msgs, usage, err := openai.Chat(context.Background(), chat, opt, client, creds)
-        if err != nil {
-            fmt.Printf("** %v\n", err)
-            continue
-        }
-
-        fmt.Printf("\nChatGPT: %s\n\n", strings.TrimSpace(msgs[0].Content))
-        chat = append(chat, msgs[0])
-    }
+	creds := openai.Credentials{APIKey: os.Getenv("OPENAI_API_KEY")}
+	opt := openai.DefaultChatOptions()
+	// Set OPENAI_MODEL to an available Chat Completions model supported by this SDK.
+	opt.Model = os.Getenv("OPENAI_MODEL")
+	if creds.APIKey == "" || opt.Model == "" {
+		panic("set OPENAI_API_KEY and OPENAI_MODEL")
+	}
+	opt.MaxTokens = 128
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	msgs, _, err := openai.Chat(ctx, []openai.Msg{openai.UserMsg("Hello!")}, opt,
+		&http.Client{Timeout: time.Minute}, creds)
+	if err != nil {
+		panic(err)
+	}
+	if len(msgs) == 0 {
+		panic("no response messages")
+	}
+	fmt.Println(msgs[0].Content)
 }
 ```
 
